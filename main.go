@@ -2,14 +2,26 @@ package main
 
 import (
 	"fmt"
-	"gator/internal/config"
+	"log"
+
+	"github.com/Levi-1103/gator/internal/config"
 )
 
 func main() {
 
-	userConfig, _ := config.Read()
-	userConfig.SetUser("levi")
-	userConfig, _ = config.Read()
+	userConfig, err := config.Read()
+	if err != nil {
+		log.Fatalf("error reading config: %v", err)
+	}
+	err = userConfig.SetUser("levi")
+	if err != nil {
+		log.Fatalf("error setting config: %v", err)
+	}
+
+	userConfig, err = config.Read()
+	if err != nil {
+		log.Fatalf("error reading config: %v", err)
+	}
 
 	fmt.Println(userConfig)
 
