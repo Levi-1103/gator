@@ -1,15 +1,19 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
 
 	"github.com/Levi-1103/gator/internal/config"
+	"github.com/Levi-1103/gator/internal/database"
+	_ "github.com/lib/pq"
 )
 
 type state struct {
 	config *config.Config
+	db     *database.Queries
 }
 
 func main() {
@@ -23,10 +27,21 @@ func main() {
 		config: &userConfig,
 	}
 
+	db, err := sql.Open("postgres", userConfig.DbURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	dbQueries := database.New(db)
+	appState.db = dbQueries
+
 	cmds := commands{
 		commandsMap: map[string]func(*state, command) error{},
 	}
 	cmds.register("login", handlerLogin)
+	cmds.register("register", handlerRegister)
+	cmds.register("reset", handlerReset)
+	cmds.register("users", handlerGetUsers)
 
 	args := os.Args
 	if len(args) < 2 {
