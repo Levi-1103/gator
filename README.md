@@ -1,1 +1,3 @@
-# Gator 🐊 CLI RSS Feed aggregator written in Golang 
+# Gator 🐊
+
+CLI RSS Feed aggregator written in Golang 
