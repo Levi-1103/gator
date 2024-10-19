@@ -4,9 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
+	"strings"
 	"time"
 
 	"github.com/Levi-1103/gator/internal/database"
+	"github.com/google/uuid"
 )
 
 func handlerAgg(s *state, cmd command) error {
@@ -57,10 +60,37 @@ func scrapeFeeds(s *state) error {
 	fmt.Println()
 
 	for _, item := range feedData.Channel.Item {
-		fmt.Println(item.Title)
+
+		pubTime, _ := time.Parse(time.RFC1123Z, item.PubDate)
+		publishedAt := sql.NullTime{
+			Time:  pubTime,
+			Valid: true,
+		}
+
+		_, err = s.db.CreatePost(context.Background(), database.CreatePostParams{
+			ID:        uuid.New(),
+			CreatedAt: now,
+			UpdatedAt: now,
+			Title:     item.Title,
+			Url:       item.Link,
+			Description: sql.NullString{
+				String: item.Description,
+				Valid:  true,
+			},
+			PublishedAt: publishedAt,
+			FeedID:      nextFeed.ID,
+		},
+		)
+		if err != nil {
+			if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
+				continue
+			}
+			log.Printf("Couldn't create post: %v", err)
+			continue
+		}
 	}
 
-	fmt.Println()
+	fmt.Println("Collected Posts")
 
 	return nil
 }
